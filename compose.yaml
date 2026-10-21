@@ -1,0 +1,96 @@
+name: php2shell-poc
+
+services:
+  oom-target:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.oom-trigger
+    networks:
+      oom-lab:
+        aliases: [php2shell-oom-target]
+    mem_limit: 256m
+    cpus: 1
+    pids_limit: 64
+
+  oom-runner:
+    platform: linux/amd64
+    image: python:3.13-slim
+    depends_on:
+      oom-target:
+        condition: service_started
+    entrypoint: ["python", "/tmp/trigger.py", "http://php2shell-oom-target/"]
+    volumes:
+      - ./trigger_cve_2026_109618.py:/tmp/trigger.py:ro
+    networks: [oom-lab]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 96m
+    cpus: 0.5
+    pids_limit: 16
+
+  stale-target:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.stale-state-trigger
+    networks:
+      stale-lab:
+        aliases: [php2shell-stale-target]
+    mem_limit: 256m
+    cpus: 1
+    pids_limit: 64
+
+  stale-runner:
+    platform: linux/amd64
+    image: python:3.13-slim
+    depends_on:
+      stale-target:
+        condition: service_started
+    entrypoint: ["python", "/tmp/trigger.py", "http://php2shell-stale-target/"]
+    volumes:
+      - ./trigger_cve_2026_109619.py:/tmp/trigger.py:ro
+    networks: [stale-lab]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 96m
+    cpus: 0.5
+    pids_limit: 16
+
+  stale-control:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.stale-state-trigger
+      args:
+        FATAL_ERROR_BACKTRACES: "0"
+    networks:
+      stale-control-lab:
+        aliases: [php2shell-stale-target]
+    mem_limit: 256m
+    cpus: 1
+    pids_limit: 64
+
+  stale-control-runner:
+    platform: linux/amd64
+    image: python:3.13-slim
+    depends_on:
+      stale-control:
+        condition: service_started
+    entrypoint: ["python", "/tmp/trigger.py", "http://php2shell-stale-target/"]
+    volumes:
+      - ./trigger_cve_2026_109619.py:/tmp/trigger.py:ro
+    networks: [stale-control-lab]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 96m
+    cpus: 0.5
+    pids_limit: 16
+
+networks:
+  oom-lab:
+    internal: true
+  stale-lab:
+    internal: true
+  stale-control-lab:
+    internal: true

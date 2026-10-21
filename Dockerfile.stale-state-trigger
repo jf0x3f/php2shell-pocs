@@ -1,0 +1,16 @@
+FROM php:8.5.4-apache-bookworm
+
+ARG FATAL_ERROR_BACKTRACES=1
+
+COPY apache-prefork-single.conf /etc/apache2/mods-available/mpm_prefork.conf
+COPY stale-state-php.ini /usr/local/etc/php/conf.d/zz-local-stale-state.ini
+COPY stale-state-site.conf /etc/apache2/sites-available/000-default.conf
+COPY stale-state-web/ /var/www/html/
+
+RUN a2enmod rewrite \
+    && if [ "$FATAL_ERROR_BACKTRACES" = "0" ]; then \
+         printf '%s\n' 'fatal_error_backtraces=0' \
+           > /usr/local/etc/php/conf.d/zzz-local-stale-state-override.ini; \
+       fi \
+    && mkdir -p /var/www/html/producer /var/www/html/consumer /var/www/html/control \
+    && chown -R www-data:www-data /var/www/html

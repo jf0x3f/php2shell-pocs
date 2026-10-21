@@ -1,0 +1,9 @@
+FROM php2shell-stale-trigger:8.5.4
+
+RUN printf '%s\n' \
+      'fatal_error_backtraces=0' \
+      'display_errors=1' \
+      'log_errors=1' \
+      'error_reporting=E_ALL' \
+      'error_log=/proc/self/fd/2' \
+      > /usr/local/etc/php/conf.d/zz-local-stale-state.ini
