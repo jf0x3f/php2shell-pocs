@@ -35,14 +35,6 @@ docker compose up --build
 Compose builds the lab images, runs both trigger cases and the control, then
 prints the request results with the Apache/PHP logs. The containers publish no
 host ports. Each target and its runner use a separate internal Docker network.
-Press Ctrl+C after the results appear, then remove the containers and networks
-with:
-
-```sh
-docker compose down
-```
-
-The built images remain cached.
 
 ### Run one case manually
 
