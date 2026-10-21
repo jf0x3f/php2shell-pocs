@@ -44,6 +44,55 @@ docker compose down
 
 The built images remain cached.
 
+### Run one case manually
+
+For a single case, use Python 3.10 or newer on the host and run this helper
+from the repository directory. Docker Engine and its Compose plugin must be
+available; the first run also needs network access to pull the images.
+
+```sh
+python3 run_poc.py
+```
+
+It prompts for the OOM trigger, the producer/consumer trigger, or the
+`fatal_error_backtraces=0` control. You can also choose a case directly:
+
+```sh
+python3 run_poc.py oom
+python3 run_poc.py stale
+python3 run_poc.py control
+```
+
+The helper starts only the selected disposable target, runs its corresponding
+request script in a Python container on the target's internal Docker network,
+prints the target's PHP/Apache logs, and removes the containers and network it
+started. It refuses to run when this Compose project already has containers;
+run `docker compose down` first if a previous run is still present. The
+`trigger_cve_*.py` files are the request scripts used by these runner
+containers. They expect the lab's internal Docker hostnames and are not meant
+to be run directly on the host or pointed at an arbitrary server.
+
+### Expected output
+
+Exact HTTP status codes and diagnostic wording can vary slightly between
+Docker and image revisions. The useful observations are:
+
+- **`oom`:** The runner prints a healthy PHP 8.4.26 baseline, sends a multipart
+  request with 80,000 part headers, and PHP logs a memory-limit exhaustion
+  during parsing. The follow-up health check should still return the PHP
+  `PHP_READY` response, showing Apache remains available.
+- **`stale`:** The runner prints the initial worker PID and the fatal-error
+  producer result. The consumer request may disconnect; Apache should log
+  `zend_mm_heap corrupted`, and the follow-up health check should report a
+  different worker PID after Apache replaces the aborted worker.
+- **`control`:** The same producer/consumer sequence runs with
+  `fatal_error_backtraces=0`. Requests should complete and the initial,
+  producer, consumer, and follow-up health checks should use the same worker
+  PID.
+
+These results show the trigger behavior for these container configurations.
+They do not demonstrate a controlled memory primitive or RCE.
+
 ### CPU architecture
 
 The Compose file uses the host's native Linux architecture; it does not force
