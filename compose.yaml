@@ -2,7 +2,6 @@ name: php2shell-poc
 
 services:
   oom-target:
-    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile.oom-trigger
@@ -14,7 +13,6 @@ services:
     pids_limit: 64
 
   oom-runner:
-    platform: linux/amd64
     image: python:3.13-slim
     depends_on:
       oom-target:
@@ -30,7 +28,6 @@ services:
     pids_limit: 16
 
   stale-target:
-    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile.stale-state-trigger
@@ -42,7 +39,6 @@ services:
     pids_limit: 64
 
   stale-runner:
-    platform: linux/amd64
     image: python:3.13-slim
     depends_on:
       stale-target:
@@ -58,7 +54,6 @@ services:
     pids_limit: 16
 
   stale-control:
-    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile.stale-state-trigger
@@ -72,7 +67,6 @@ services:
     pids_limit: 64
 
   stale-control-runner:
-    platform: linux/amd64
     image: python:3.13-slim
     depends_on:
       stale-control:
