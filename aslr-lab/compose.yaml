@@ -1,0 +1,17 @@
+services:
+  target:
+    image: php:8.4.26-apache
+    platform: linux/amd64
+    container_name: php2shell-aslr-target
+    ports:
+      - "127.0.0.1:8089:80"
+    volumes:
+      - ./upstream/docker/php.ini:/usr/local/etc/php/conf.d/zz-php2shell.ini:ro
+      - ./upstream/docker/apache.conf:/etc/apache2/conf-enabled/zz-php2shell.conf:ro
+      - ./upstream/docker/www:/var/www/html:ro
+      - ./aslr-out:/out
+    command:
+      - /bin/sh
+      - -c
+      - chown -R www-data:www-data /out 2>/dev/null || true; exec apache2-foreground
+    restart: "no"
